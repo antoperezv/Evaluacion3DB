@@ -1,15 +1,13 @@
 -- ============================================================
 -- EVALUACIÓN PARCIAL N°3 - FORMA A
 -- Caso Gestión de Valorización de Residuos – Ley REP
--- SCRIPT COMPLETO: USUARIO, CREACIÓN, RESTRICCIONES, POBLADO Y CONSULTAS
+-- SCRIPT BASE ENTREGADO POR LA CONSULTORA (INCOMPLETO)
 -- ============================================================
 
 -- ============================================================
--- 1. CREACIÓN DE USUARIO (ejecutar conectado como SYS, rol SYSDBA)
+-- 1. CREACIÓN DE USUARIO
 -- ============================================================
--- Si da error ORA-65096, descomente la siguiente línea y ejecútela
--- antes de crear el usuario:
--- ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
+ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
 
 CREATE USER Evaluacion3 IDENTIFIED BY "Duoc.2026"
 DEFAULT TABLESPACE USERS
@@ -18,12 +16,8 @@ QUOTA UNLIMITED ON USERS;
 
 GRANT CREATE SESSION, CREATE TABLE, CREATE SEQUENCE, CREATE VIEW TO Evaluacion3;
 
--- Desde aquí en adelante, conectarse con el usuario Evaluacion3
-
-
 -- ============================================================
--- 2. ELIMINACIÓN DE OBJETOS (permite re-ejecutar el script)
---    La primera vez que se ejecuta, estos DROP dan error: es normal.
+-- 2. ELIMINACIÓN DE OBJETOS
 -- ============================================================
 DROP TABLE T_TRANSFORMACION_LOTE      CASCADE CONSTRAINTS;
 DROP TABLE T_CERTIFICADO_VALORIZACION CASCADE CONSTRAINTS;
@@ -39,17 +33,11 @@ DROP TABLE T_MATERIALIDAD             CASCADE CONSTRAINTS;
 DROP SEQUENCE SEQ_LOTE_RECOLECCION;
 DROP SEQUENCE SEQ_SUBPRODUCTO;
 
-
 -- ============================================================
 -- 3. CREACIÓN DE TABLAS
 -- ============================================================
--- Análisis de tipos de datos: se revisaron los tipos del modelo (Anexo 1)
--- contra los datos a almacenar. RUT, patentes y N° de certificado se
--- definen como VARCHAR2 (contienen puntos, guion, letras); pesos,
--- porcentajes y capacidades como NUMBER(p,s) por tener decimales;
--- fechas como DATE.
 
--- TABLA: T_MATERIALIDAD (script base)
+-- TABLA: T_MATERIALIDAD
 CREATE TABLE T_MATERIALIDAD (
     ID_MATERIALIDAD            NUMBER NOT NULL,
     NOMBRE_MATERIALIDAD        VARCHAR2(40) NOT NULL,
@@ -57,7 +45,7 @@ CREATE TABLE T_MATERIALIDAD (
     CONSTRAINT PK_MATERIALIDAD PRIMARY KEY (ID_MATERIALIDAD)
 );
 
--- TABLA: T_PRODUCTOR (script base)
+-- TABLA: T_PRODUCTOR
 CREATE TABLE T_PRODUCTOR (
     ID_PRODUCTOR               NUMBER NOT NULL,
     RUT_PRODUCTOR              VARCHAR2(12) NOT NULL,
@@ -66,7 +54,7 @@ CREATE TABLE T_PRODUCTOR (
     CONSTRAINT PK_PRODUCTOR PRIMARY KEY (ID_PRODUCTOR)
 );
 
--- TABLA: T_PLANTA_RECICLADORA (script base)
+-- TABLA: T_PLANTA_RECICLADORA
 CREATE TABLE T_PLANTA_RECICLADORA (
     ID_PLANTA                  NUMBER NOT NULL,
     RUT_PLANTA                 VARCHAR2(12) NOT NULL,
@@ -76,7 +64,7 @@ CREATE TABLE T_PLANTA_RECICLADORA (
     CONSTRAINT PK_PLANTA_RECICLADORA PRIMARY KEY (ID_PLANTA)
 );
 
--- TABLA: T_DECLARACION_POM (script base)
+-- TABLA: T_DECLARACION_POM
 CREATE TABLE T_DECLARACION_POM (
     FK_ID_PRODUCTOR            NUMBER NOT NULL,
     FK_ID_MATERIALIDAD         NUMBER NOT NULL,
@@ -85,7 +73,7 @@ CREATE TABLE T_DECLARACION_POM (
     CONSTRAINT PK_DECLARACION_POM PRIMARY KEY (FK_ID_PRODUCTOR, FK_ID_MATERIALIDAD, ANIO)
 );
 
--- TABLA: T_TRANSPORTISTA (script base)
+-- TABLA: T_TRANSPORTISTA
 CREATE TABLE T_TRANSPORTISTA (
     ID_TRANSPORTISTA           NUMBER NOT NULL,
     RUT_TRANSPORTISTA          VARCHAR2(12) NOT NULL,
@@ -95,9 +83,7 @@ CREATE TABLE T_TRANSPORTISTA (
     CONSTRAINT UN_TRANSPORTIST_RUT_TRANSPORTI UNIQUE (RUT_TRANSPORTISTA)
 );
 
--- ------------------------------------------------------------
--- Restricciones faltantes en las tablas del script base
--- ------------------------------------------------------------
+-- RESTRICCIONES FALTANTES EN TABLAS EXISTENTES
 ALTER TABLE T_MATERIALIDAD
     ADD CONSTRAINT UN_MATERIALIDAD_NOMBRE_MATERIA UNIQUE (NOMBRE_MATERIALIDAD);
 
@@ -115,12 +101,9 @@ ALTER TABLE T_DECLARACION_POM
     ADD CONSTRAINT FK_DECLARACION_MATERIALIDAD FOREIGN KEY (FK_ID_MATERIALIDAD)
     REFERENCES T_MATERIALIDAD (ID_MATERIALIDAD);
 
--- ------------------------------------------------------------
--- Tablas marcadas en rojo en el Anexo 1
--- ------------------------------------------------------------
 
 -- TABLA: T_PUNTO_ACOPIO
--- ID_PUNTO autoincrementable (IDENTITY): inicia en 10, incrementa de 1 en 1
+-- ID_PUNTO autoincrementable desde 10
 CREATE TABLE T_PUNTO_ACOPIO (
     ID_PUNTO                   NUMBER GENERATED ALWAYS AS IDENTITY
                                (START WITH 10 INCREMENT BY 1) NOT NULL,
@@ -172,9 +155,7 @@ CREATE TABLE T_SUBPRODUCTO (
 );
 
 -- TABLA: T_TRANSFORMACION_LOTE
--- Tabla que normaliza el modelo: resuelve la relación muchos a muchos
--- entre T_LOTE_RECOLECCION y T_SUBPRODUCTO (un lote genera varios
--- subproductos y un subproducto se obtiene de varios lotes).
+-- Resuelve la relación muchos a muchos entre lotes y subproductos
 CREATE TABLE T_TRANSFORMACION_LOTE (
     FK_NRO_LOTE                NUMBER NOT NULL,
     FK_ID_SUBPRODUCTO          NUMBER NOT NULL,
@@ -211,27 +192,24 @@ CREATE TABLE T_CERTIFICADO_VALORIZACION (
 );
 
 
--- ============================================================
 -- SECUENCIAS
--- ============================================================
--- Lotes de recolección: inicia en 5001, incrementa de 1 en 1
+-- Lotes de recolección (desde 5001)
 CREATE SEQUENCE SEQ_LOTE_RECOLECCION
     START WITH 5001
     INCREMENT BY 1
     NOCACHE;
 
--- Subproductos reciclados: inicia en 1, incrementa de 1 en 1
+-- Subproductos (desde 1)
 CREATE SEQUENCE SEQ_SUBPRODUCTO
     START WITH 1
     INCREMENT BY 1
     NOCACHE;
 
-
 -- ============================================================
 -- 4. INSERCIÓN DE DATOS
 -- ============================================================
 
--- Insertar MATERIALIDAD (script base)
+-- Insertar MATERIALIDAD
 INSERT INTO T_MATERIALIDAD (ID_MATERIALIDAD, NOMBRE_MATERIALIDAD, META_VALORIZACION_PCT)
 VALUES (1, 'Papel y cartón', 32.0);
 INSERT INTO T_MATERIALIDAD (ID_MATERIALIDAD, NOMBRE_MATERIALIDAD, META_VALORIZACION_PCT)
@@ -243,7 +221,7 @@ VALUES (4, 'Metal - Aluminio', 30.0);
 INSERT INTO T_MATERIALIDAD (ID_MATERIALIDAD, NOMBRE_MATERIALIDAD, META_VALORIZACION_PCT)
 VALUES (5, 'Cartón para líquidos', 18.0);
 
--- Insertar PRODUCTOR (script base)
+-- Insertar PRODUCTOR
 INSERT INTO T_PRODUCTOR (ID_PRODUCTOR, RUT_PRODUCTOR, RAZON_SOCIAL, EMAIL_CONTACTO)
 VALUES (101, '76.345.120-K', 'Bebidas Andinas S.A.', 'rep@bebidasandinas.cl');
 INSERT INTO T_PRODUCTOR (ID_PRODUCTOR, RUT_PRODUCTOR, RAZON_SOCIAL, EMAIL_CONTACTO)
@@ -253,7 +231,7 @@ VALUES (103, '77.210.890-5', 'Cosmética Natural Ltda.', 'contacto@cosmeticanatu
 INSERT INTO T_PRODUCTOR (ID_PRODUCTOR, RUT_PRODUCTOR, RAZON_SOCIAL, EMAIL_CONTACTO)
 VALUES (104, '76.902.334-1', 'Snacks La Pradera S.A.', NULL);
 
--- Insertar PLANTA_RECICLADORA (script base)
+-- Insertar PLANTA_RECICLADORA
 INSERT INTO T_PLANTA_RECICLADORA (ID_PLANTA, RUT_PLANTA, NOMBRE_PLANTA, COMUNA, RESOLUCION_SANITARIA)
 VALUES (1, '76.554.001-2', 'Recicladora PET Maipú', 'Maipú', 'RS-2023-1180');
 INSERT INTO T_PLANTA_RECICLADORA (ID_PLANTA, RUT_PLANTA, NOMBRE_PLANTA, COMUNA, RESOLUCION_SANITARIA)
@@ -263,7 +241,7 @@ VALUES (3, '76.110.778-9', 'Vidriera Circular Llay-Llay', 'Llay-Llay', 'RS-2024-
 INSERT INTO T_PLANTA_RECICLADORA (ID_PLANTA, RUT_PLANTA, NOMBRE_PLANTA, COMUNA, RESOLUCION_SANITARIA)
 VALUES (4, '77.302.456-8', 'Fundición Metales Lampa', 'Lampa', 'RS-2021-0712');
 
--- Insertar DECLARACION_POM (script base)
+-- Insertar DECLARACION_POM
 INSERT INTO T_DECLARACION_POM (FK_ID_PRODUCTOR, FK_ID_MATERIALIDAD, ANIO, TONELADAS_DECLARADAS)
 VALUES (101, 2, 2026, 120.5);
 INSERT INTO T_DECLARACION_POM (FK_ID_PRODUCTOR, FK_ID_MATERIALIDAD, ANIO, TONELADAS_DECLARADAS)
@@ -279,7 +257,8 @@ VALUES (104, 1, 2026, 22.0);
 INSERT INTO T_DECLARACION_POM (FK_ID_PRODUCTOR, FK_ID_MATERIALIDAD, ANIO, TONELADAS_DECLARADAS)
 VALUES (104, 3, 2026, 30.0);
 
--- Insertar T_TRANSPORTISTA (script base)
+
+-- Insertar T_TRANSPORTISTA
 INSERT INTO T_TRANSPORTISTA (ID_TRANSPORTISTA, RUT_TRANSPORTISTA, NOMBRE_TRANSPORTISTA, PATENTE_CAMION)
 VALUES (1, '78.112.330-6', 'Transportes Reciclar Ltda.', 'RTXZ21');
 INSERT INTO T_TRANSPORTISTA (ID_TRANSPORTISTA, RUT_TRANSPORTISTA, NOMBRE_TRANSPORTISTA, PATENTE_CAMION)
@@ -288,7 +267,6 @@ INSERT INTO T_TRANSPORTISTA (ID_TRANSPORTISTA, RUT_TRANSPORTISTA, NOMBRE_TRANSPO
 VALUES (3, '12.876.554-3', 'Juan Carlos Pizarro Toro', 'HJRT45');
 
 -- Insertar PUNTO_ACOPIO
--- ID_PUNTO es IDENTITY: no se indica, Oracle asigna 10, 11, 12, 13
 INSERT INTO T_PUNTO_ACOPIO (NOMBRE_PUNTO, TIPO_PUNTO, DIRECCION, COMUNA, CAPACIDAD_M3)
 VALUES ('Punto Limpio Ñuñoa', 'Punto Limpio', 'Av. Grecia 3400', 'Ñuñoa', 45);
 INSERT INTO T_PUNTO_ACOPIO (NOMBRE_PUNTO, TIPO_PUNTO, DIRECCION, COMUNA, CAPACIDAD_M3)
@@ -298,7 +276,7 @@ VALUES ('Punto Limpio La Florida', 'Punto Limpio', 'Av. Walker Martínez 2150', 
 INSERT INTO T_PUNTO_ACOPIO (NOMBRE_PUNTO, TIPO_PUNTO, DIRECCION, COMUNA, CAPACIDAD_M3)
 VALUES ('Contenedor Verde Parque Sur', 'Contenedor Verde', 'Calle Los Aromos 1200', 'San Bernardo', 6);
 
--- Insertar LOTE_RECOLECCION (NRO_LOTE con secuencia: 5001 a 5008)
+-- Insertar LOTE_RECOLECCION
 INSERT INTO T_LOTE_RECOLECCION (NRO_LOTE, FK_ID_PUNTO, FK_ID_MATERIALIDAD, FK_ID_TRANSPORTISTA, FECHA_RECOLECCION, PESO_BRUTO_KG, PORC_CONTAMINACION, ESTADO_LOTE)
 VALUES (SEQ_LOTE_RECOLECCION.NEXTVAL, 10, 2, 1, TO_DATE('2026-03-02', 'YYYY-MM-DD'), 1250, 3.5, 'Clasificado');
 INSERT INTO T_LOTE_RECOLECCION (NRO_LOTE, FK_ID_PUNTO, FK_ID_MATERIALIDAD, FK_ID_TRANSPORTISTA, FECHA_RECOLECCION, PESO_BRUTO_KG, PORC_CONTAMINACION, ESTADO_LOTE)
@@ -316,7 +294,7 @@ VALUES (SEQ_LOTE_RECOLECCION.NEXTVAL, 11, 2, 2, TO_DATE('2026-03-12', 'YYYY-MM-D
 INSERT INTO T_LOTE_RECOLECCION (NRO_LOTE, FK_ID_PUNTO, FK_ID_MATERIALIDAD, FK_ID_TRANSPORTISTA, FECHA_RECOLECCION, PESO_BRUTO_KG, PORC_CONTAMINACION, ESTADO_LOTE)
 VALUES (SEQ_LOTE_RECOLECCION.NEXTVAL, 12, 1, 3, TO_DATE('2026-03-13', 'YYYY-MM-DD'), 1720, 5.5, 'Clasificado');
 
--- Insertar SUBPRODUCTO (ID_SUBPRODUCTO con secuencia: 1 a 6)
+-- Insertar SUBPRODUCTO
 INSERT INTO T_SUBPRODUCTO (ID_SUBPRODUCTO, NOMBRE_SUBPRODUCTO, FK_ID_MATERIALIDAD, PRECIO_TONELADA)
 VALUES (SEQ_SUBPRODUCTO.NEXTVAL, 'Escamas de PET lavado', 2, 420000);
 INSERT INTO T_SUBPRODUCTO (ID_SUBPRODUCTO, NOMBRE_SUBPRODUCTO, FK_ID_MATERIALIDAD, PRECIO_TONELADA)
@@ -358,12 +336,10 @@ VALUES ('CV-2026-006', 5008, 2, 104, TO_DATE('2026-03-28', 'YYYY-MM-DD'), 1590, 
 
 COMMIT;
 
-
 -- ============================================================
 -- 5. CONSULTAS
 -- ============================================================
-
--- Consulta 1: kilos de contaminación y peso neto de los lotes clasificados
+-- Consulta 1: peso neto de los lotes clasificados
 SELECT NRO_LOTE,
        PESO_BRUTO_KG,
        PESO_BRUTO_KG * PORC_CONTAMINACION / 100                   AS KG_CONTAMINACION,
@@ -372,7 +348,7 @@ FROM   T_LOTE_RECOLECCION
 WHERE  ESTADO_LOTE = 'Clasificado'
 ORDER BY PESO_NETO DESC;
 
--- Consulta 2: puntos limpios y centros de acopio con capacidad entre 30 y 400 m3
+-- Consulta 2: puntos de acopio por tipo y capacidad
 SELECT NOMBRE_PUNTO || ' - ' || COMUNA AS PUNTO,
        TIPO_PUNTO,
        CAPACIDAD_M3
